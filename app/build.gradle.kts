@@ -1,3 +1,14 @@
+import java.util.Properties
+
+// Create a new Properties object
+val localProperties = Properties()
+// Locate the local.properties file in the root project
+val localPropertiesFile = rootProject.file("local.properties")
+// If the file exists, load its properties
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -15,6 +26,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
