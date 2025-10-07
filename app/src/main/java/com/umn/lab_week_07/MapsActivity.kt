@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -20,6 +21,9 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.umn.lab_week_07.databinding.ActivityMapsBinding
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+    private val fusedLocationProviderClient by lazy {
+        LocationServices.getFusedLocationProviderClient(this)
+    }
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
@@ -76,6 +80,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun getLastLocation() {
-        Log.d("MapsActivity", "getLastLocation() called.")
+        if (hasLocationPermission()) {
+            try {
+                fusedLocationProviderClient.lastLocation
+                    .addOnSuccessListener { location: Location? ->
+                        location?.let {
+                            val userLocation = LatLng(it.latitude, it.longitude)
+                            updateMapLocation(userLocation)
+                            addMarkerAtLocation(userLocation, "You")
+                        }
+                    }
+            } catch (e: SecurityException) {
+                Log.e("MapsActivity", "Security Exception: ${e.message}")
+            }
+        } else {
+            requestPermissionLauncher.launch(ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun updateMapLocation(location: LatLng) {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f)) // Saya ubah zoom ke 15f agar lebih dekat
+    }
+
+    private fun addMarkerAtLocation(location: LatLng, title: String) {
+        mMap.addMarker(MarkerOptions().title(title).position(location))
     }
 }
